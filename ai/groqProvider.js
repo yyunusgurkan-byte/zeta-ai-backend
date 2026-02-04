@@ -6,11 +6,10 @@ require('dotenv').config();
 
 class GroqProvider {
   constructor() {
-    this.apiKey = process.env.VITE_GROQ_API_KEY;
-    this.fallbackKey = process.env.VITE_FALLBACK_API_KEY;
-    this.model = process.env.AI_MODEL_NAME || 'llama-3.1-70b-versatile';
-    this.fallbackModel = process.env.FALLBACK_MODEL_NAME || 'llama-3.1-8b-instant';
-    this.baseURL = 'https://api.groq.com/openai/v1/chat/completions';
+   this.apiKey = process.env.GROQ_API_KEY;
+this.fallbackKey = process.env.FALLBACK_API_KEY;
+this.model = process.env.AI_MODEL || 'llama-3.3-70b-versatile';
+this.fallbackModel = process.env.FALLBACK_MODEL || 'llama-3.1-8b-instant';
 
     if (!this.apiKey && !this.fallbackKey) {
       console.error('❌ GROQ API KEY bulunamadı! .env dosyanızı kontrol edin.');
