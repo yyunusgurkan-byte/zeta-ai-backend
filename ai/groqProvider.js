@@ -10,6 +10,7 @@ class GroqProvider {
 this.fallbackKey = process.env.FALLBACK_API_KEY;
 this.model = process.env.AI_MODEL || 'llama-3.3-70b-versatile';
 this.fallbackModel = process.env.FALLBACK_MODEL || 'llama-3.1-8b-instant';
+this.baseURL = 'https://api.groq.com/openai/v1/chat/completions';
 
     if (!this.apiKey && !this.fallbackKey) {
       console.error('❌ GROQ API KEY bulunamadı! .env dosyanızı kontrol edin.');
