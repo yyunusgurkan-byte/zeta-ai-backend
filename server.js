@@ -28,16 +28,16 @@ if (!fs.existsSync(uploadDir)){
 app.use(express.static(path.join(__dirname)));
 app.use('/uploads', express.static(uploadDir));
 
-// ✅ Template literal düzeltildi
 app.use((req, res, next) => {
-  console.log(`[REQUEST] ${req.method} ${req.url}`);
+  console.log(`📥 ${req.method} ${req.path}`);
   next();
 });
 
 // ====================================================================
-// ROUTES - TRY-CATCH KALDIRILDI
+// ROUTES
 // ====================================================================
 
+// Health checks
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -50,7 +50,7 @@ app.get('/api/status', (req, res) => {
   res.json({ service: 'Zeta AI Backend', status: 'running' });
 });
 
-// ✅ Try-catch kaldırıldı - hata varsa server başlamayacak
+// API Routes
 const chatRoutes = require('./routes/chat');
 const conversationRoutes = require('./routes/conversation');
 const uploadRoutes = require('./routes/upload');
@@ -59,18 +59,9 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// ⚠️ KRİTİK: Wildcard route EN SONA konmalı
-// API route'larından SONRA gelmelidir
-app.get('*', (req, res) => {
-  const indexPath = path.join(__dirname, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send("Route bulunamadı");
-  }
-});
-
-// Error handler
+// ====================================================================
+// ERROR HANDLER - Wildcard'dan ÖNCE!
+// ====================================================================
 app.use((err, req, res, next) => {
   console.error("❌ HATA:", err.message);
   res.status(500).json({
@@ -80,8 +71,21 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ====================================================================
+// WILDCARD ROUTE - EN SONDA!
+// ====================================================================
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'NOT_FOUND',
+    message: `❌ Route bulunamadı: ${req.method} ${req.path}`
+  });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Sunucu ${PORT} portunda başlatıldı.`);
+  console.log(`📡 Health: http://localhost:${PORT}/health`);
+  console.log(`📤 Upload: http://localhost:${PORT}/api/upload`);
 });
 
 module.exports = app;
