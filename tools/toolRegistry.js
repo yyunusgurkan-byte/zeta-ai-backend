@@ -11,21 +11,22 @@ class ToolRegistry {
    * Varsayılan toolları kaydet
    */
   registerDefaultTools() {
-    console.log('📦 Registering default tools...');
+  console.log('📦 Registering default tools...');
+  try {
+    // Toolları yükle ve kaydet
+    this.register('webSearch', require('./webSearch'));
+    this.register('wikipedia', require('./wikipedia'));
+    this.register('weather', require('./weather'));
+    this.register('calculator', require('./calculator'));
+    this.register('apiFootball', require('./apiFootball'));
+    // this.register('tffSports', require('./tffSports')); ← Yorum satırı yaptık
 
-    try {
-      // Toolları yükle ve kaydet
-      this.register('webSearch', require('./webSearch'));
-      this.register('wikipedia', require('./wikipedia'));
-      this.register('weather', require('./weather'));
-      this.register('calculator', require('./calculator'));
-      this.register('tffSports', require('./tffSports'));
-
-      console.log(`✅ ${this.tools.size} tools registered successfully`);
-    } catch (error) {
-      console.error('❌ Error registering tools:', error.message);
-    }
+    
+    console.log(`✅ ${this.tools.size} tools registered successfully`);
+  } catch (error) {
+    console.error('❌ Error registering tools:', error.message);
   }
+}
 
   /**
    * Yeni tool kaydet

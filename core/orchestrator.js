@@ -81,37 +81,52 @@ class ZetaOrchestrator {
 
   /**
    * Tool kararı ver - Hangi tool kullanılacak?
+   * ÖNEMLİ: Kontrol sırası önemli! Daha spesifik olanlar önce kontrol edilmeli.
    */
   async decideTools(userMessage) {
     const lowerInput = userMessage.toLowerCase();
 
-    // ⚽ SPOR SORGUSU
-    const sportsKeywords = [
-      'galatasaray', 'fenerbahçe', 'beşiktaş', 'trabzonspor',
-      'süper lig', 'puan durumu', 'puan tablosu', 'sıralama',
-      'maç', 'gol', 'skor', 'futbol'
-    ];
-
-    if (sportsKeywords.some(k => lowerInput.includes(k))) {
-      return {
-        useTool: true,
-        toolName: 'tffSports',
-        params: { query: userMessage }
-      };
-    }
-
-    // 🌤️ HAVA DURUMU
-    const weatherKeywords = ['hava durumu', 'sıcaklık', 'weather', 'derece'];
+    // 🌤️ HAVA DURUMU (EN ÖNCE KONTROL ET!)
+    const weatherKeywords = ['hava durumu', 'sıcaklık', 'weather', 'derece', 'yağmur', 'kar', 'güneş'];
     
     if (weatherKeywords.some(k => lowerInput.includes(k))) {
-      // Şehir adını çıkar
-      const cityMatch = userMessage.match(/(?:hava durumu|weather)\s+(\w+)/i);
-      const city = cityMatch ? cityMatch[1] : 'Istanbul';
+      // Şehir adını çıkar - daha gelişmiş pattern
+      let city = 'Istanbul';
+      
+      // "İstanbul hava durumu" veya "hava durumu İstanbul" pattern'leri
+      const cityPatterns = [
+        /([a-zçğıöşü]+)\s+(?:hava durumu|weather)/i,
+        /(?:hava durumu|weather)\s+([a-zçğıöşü]+)/i,
+        /^([a-zçğıöşü]+)$/i  // Sadece şehir adı
+      ];
+      
+      for (const pattern of cityPatterns) {
+        const match = userMessage.match(pattern);
+        if (match && match[1] && match[1].toLowerCase() !== 'ara' && match[1].toLowerCase() !== 'hava') {
+          city = match[1];
+          break;
+        }
+      }
       
       return {
         useTool: true,
         toolName: 'weather',
         params: { city }
+      };
+    }
+
+    // ⚽ SPOR SORGUSU
+    const sportsKeywords = [
+      'galatasaray', 'fenerbahçe', 'beşiktaş', 'trabzonspor', 'başakşehir',
+      'süper lig', 'puan durumu', 'puan tablosu', 'sıralama',
+      'maç', 'gol', 'skor', 'futbol', 'son maç'
+    ];
+
+    if (sportsKeywords.some(k => lowerInput.includes(k))) {
+      return {
+        useTool: true,
+        toolName: 'apiFootball',
+        params: { query: userMessage }
       };
     }
 
@@ -137,7 +152,7 @@ class ZetaOrchestrator {
       }
     }
 
-    // 🌐 GOOGLE SEARCH
+    // 🌐 GOOGLE SEARCH (EN SONA BIRAK - catch-all)
     const searchKeywords = [
       'ara', 'bul', 'search', 'güncel', 'son dakika',
       'bugün', 'şu an', 'haber'
