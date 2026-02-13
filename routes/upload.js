@@ -3,11 +3,16 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 
+// TEST ENDPOINT
+router.get('/test', (req, res) => {
+  res.json({ success: true, message: 'Upload route çalışıyor!' });
+});
+
 // Multer config - memory storage
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -22,11 +27,12 @@ const upload = multer({
 
 router.post('/', upload.single('image'), async (req, res) => {
   try {
+    console.log('📥 Upload request received');
+    
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Base64'e çevir
     const base64Image = req.file.buffer.toString('base64');
     const dataUrl = `data:${req.file.mimetype};base64,${base64Image}`;
 
@@ -37,8 +43,8 @@ router.post('/', upload.single('image'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: 'Upload failed' });
+    console.error('❌ Upload error:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
