@@ -86,34 +86,36 @@ class ZetaOrchestrator {
   async decideTools(userMessage) {
     const lowerInput = userMessage.toLowerCase();
 
-    // 🌤️ HAVA DURUMU (EN ÖNCE KONTROL ET!)
-    const weatherKeywords = ['hava durumu', 'sıcaklık', 'weather', 'derece', 'yağmur', 'kar', 'güneş'];
+   // 🌤️ HAVA DURUMU - DAHA AKILLI KONTROL
+  const hasWeatherIntent = (
+    (lowerInput.includes('hava durumu') || lowerInput.includes('weather')) ||
+    (lowerInput.includes('sıcaklık') && !lowerInput.includes('öğren')) || // "öğren" varsa ML konusu
+    (lowerInput.includes('derece') && (lowerInput.includes('bugün') || lowerInput.includes('yarın'))) ||
+    /^(istanbul|ankara|izmir|bursa|antalya)\s*(hava|weather)/i.test(lowerInput)
+  );
+
+  if (hasWeatherIntent) {
+    let city = 'Istanbul';
     
-    if (weatherKeywords.some(k => lowerInput.includes(k))) {
-      // Şehir adını çıkar - daha gelişmiş pattern
-      let city = 'Istanbul';
-      
-      // "İstanbul hava durumu" veya "hava durumu İstanbul" pattern'leri
-      const cityPatterns = [
-        /([a-zçğıöşü]+)\s+(?:hava durumu|weather)/i,
-        /(?:hava durumu|weather)\s+([a-zçğıöşü]+)/i,
-        /^([a-zçğıöşü]+)$/i  // Sadece şehir adı
-      ];
-      
-      for (const pattern of cityPatterns) {
-        const match = userMessage.match(pattern);
-        if (match && match[1] && match[1].toLowerCase() !== 'ara' && match[1].toLowerCase() !== 'hava') {
-          city = match[1];
-          break;
-        }
+    const cityPatterns = [
+      /([a-zçğıöşü]+)\s+(?:hava durumu|weather)/i,
+      /(?:hava durumu|weather)\s+([a-zçğıöşü]+)/i,
+    ];
+    
+    for (const pattern of cityPatterns) {
+      const match = userMessage.match(pattern);
+      if (match && match[1]) {
+        city = match[1];
+        break;
       }
-      
-      return {
-        useTool: true,
-        toolName: 'weather',
-        params: { city }
-      };
     }
+    
+    return {
+      useTool: true,
+      toolName: 'weather',
+      params: { city }
+    };
+  }
 
     // ⚽ SPOR SORGUSU
     const sportsKeywords = [
