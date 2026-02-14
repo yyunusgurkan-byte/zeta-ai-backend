@@ -1,137 +1,93 @@
-// 🤖 GROQ AI PROVIDER
-const axios = require('axios');
+// 🤖 GROQ PROVIDER - Güncellenmiş Versiyon
+// Çoklu dil desteği ile
 
-// .env dosyasını yükle
-require('dotenv').config();
+const Groq = require('groq-sdk');
+const SYSTEM_PROMPT = require('./systemPrompt'); // Yeni sistem prompt'u import et
 
 class GroqProvider {
   constructor() {
-   this.apiKey = process.env.GROQ_API_KEY;
-this.fallbackKey = process.env.FALLBACK_API_KEY;
-this.model = process.env.AI_MODEL || 'llama-3.3-70b-versatile';
-this.fallbackModel = process.env.FALLBACK_MODEL || 'llama-3.1-8b-instant';
-this.baseURL = 'https://api.groq.com/openai/v1/chat/completions';
-
-    if (!this.apiKey && !this.fallbackKey) {
-      console.error('❌ GROQ API KEY bulunamadı! .env dosyanızı kontrol edin.');
-    } else {
-      console.log('✅ GROQ Provider initialized:', this.apiKey ? 'Primary Key' : 'Fallback Key');
-    }
+    this.client = new Groq({
+      apiKey: process.env.GROQ_API_KEY
+    });
+    
+    this.model = 'llama-3.3-70b-versatile'; // veya 'llama-3.1-70b-versatile'
+    
+    console.log('🤖 GROQ Provider initialized with multi-language support');
   }
 
-  async chat(conversationHistory = [], userMessage = '', systemPrompt = null) {
+  /**
+   * Chat completion - Çoklu dil destekli
+   * @param {Array} conversationHistory - Konuşma geçmişi
+   * @param {string} userMessage - Kullanıcı mesajı
+   * @param {string} detectedLang - Algılanan dil (opsiyonel)
+   * @returns {Promise<string>} - AI yanıtı
+   */
+  async chat(conversationHistory, userMessage, detectedLang = 'tr') {
     try {
-      const apiKey = this.apiKey || this.fallbackKey;
-      if (!apiKey) {
-        throw new Error('GROQ_API_KEY_MISSING');
-      }
-
-      const model = this.apiKey ? this.model : this.fallbackModel;
-      const messages = this.prepareMessages(conversationHistory, userMessage, systemPrompt);
-
-      console.log(`🤖 GROQ API çağrısı: ${messages.length} mesaj, model: ${model}`);
-
-      const response = await axios.post(this.baseURL, {
-        model: model,
-        messages: messages,
-        temperature: 0.2,
-        max_tokens: 1000,
-        top_p: 1,
-        stream: false
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+      // Mesajları hazırla
+      const messages = [
+        {
+          role: 'system',
+          content: SYSTEM_PROMPT // Çoklu dil destekli prompt
         },
-        timeout: 30000
+        ...conversationHistory,
+        {
+          role: 'user',
+          content: userMessage
+        }
+      ];
+
+      console.log(`🌍 Sending request to GROQ (detected lang: ${detectedLang})`);
+
+      // GROQ API çağrısı
+      const completion = await this.client.chat.completions.create({
+        model: this.model,
+        messages: messages,
+        temperature: 0.7, // Yaratıcılık dengesi
+        max_tokens: 2048,
+        top_p: 0.9,
+        stream: false
       });
 
-      const aiResponse = response.data.choices[0].message.content || 'Yanıt oluşturulamadı.';
-      console.log(`✅ GROQ yanıt alındı: ${aiResponse.length} karakter`);
+      const response = completion.choices[0]?.message?.content || 'Yanıt alınamadı.';
       
-      return aiResponse;
+      console.log(`✅ Response received (${response.length} chars)`);
+      
+      return response;
 
     } catch (error) {
-      console.error('❌ GROQ API hatası:', error.message);
-      throw this.handleError(error);
+      console.error('❌ GROQ API Error:', error.message);
+      
+      // Dil bazlı hata mesajları
+      const errorMessages = {
+        tr: '❌ Üzgünüm, şu anda yanıt veremiyorum. Lütfen tekrar deneyin.',
+        en: '❌ Sorry, I cannot respond right now. Please try again.',
+        de: '❌ Entschuldigung, ich kann derzeit nicht antworten. Bitte versuchen Sie es erneut.',
+        es: '❌ Lo siento, no puedo responder ahora. Por favor, inténtalo de nuevo.',
+        fr: '❌ Désolé, je ne peux pas répondre maintenant. Veuillez réessayer.'
+      };
+      
+      return errorMessages[detectedLang] || errorMessages['en'];
     }
   }
 
-  prepareMessages(history, userMessage, systemPrompt) {
-    const messages = [];
-
-    if (systemPrompt && systemPrompt.trim()) {
-      messages.push({
-        role: 'system',
-        content: systemPrompt
-      });
-    } else {
-      messages.push({
-        role: 'system',
-        content: this.buildDefaultSystemPrompt()
-      });
-    }
-
-    if (history && Array.isArray(history) && history.length > 0) {
-      history.forEach(msg => {
-        messages.push({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content
-        });
-      });
-    }
-
-    if (userMessage && userMessage.trim()) {
-      messages.push({
-        role: 'user',
-        content: userMessage
-      });
-    }
-
-    return messages;
+  /**
+   * Streaming chat (gelecekte eklenebilir)
+   */
+  async chatStream(conversationHistory, userMessage) {
+    // TODO: Streaming implementation
+    throw new Error('Streaming not implemented yet');
   }
 
- buildDefaultSystemPrompt() {
-  return `Sen Zeta, süper zekalı,sevecan,çok akıllı yardımcı bir AI asistansın.
-
-KİMLİĞİN:
-- İsmin: Zeta
-- Görevin: Kullanıcılara yardımcı olmak
-- Dil: SADECE TÜRKÇE (Kesinlikle başka dil kullanma!)
-
-KURALLAR:
-- SADECE Türkçe yaz, hiç başka dil karıştırma
-- Kısa ve net yanıtlar ver (3-4 cümle)
-- Samimi ama profesyonel ol
-- Türkçe karakterleri doğru kullan (ı, ş, ğ, ü, ö, ç)
-
-YETENEKLERIN:
-- Genel bilgi ve sohbet
-- Hava durumu sorgulama
-- Wikipedia araması
-- Web araması
-- Matematik hesaplamaları`;
-}
-
-  handleError(error) {
-    if (error.response?.status === 429) {
-      return new Error('RATE_LIMIT_EXCEEDED');
-    }
-    if (error.response?.status === 401) {
-      return new Error('INVALID_API_KEY');
-    }
-    if (error.code === 'ECONNABORTED') {
-      return new Error('REQUEST_TIMEOUT');
-    }
-    return new Error(error.message || 'UNKNOWN_ERROR');
-  }
-
+  /**
+   * Model bilgisini al
+   */
   getModelInfo() {
     return {
-      model: this.apiKey ? this.model : this.fallbackModel,
+      model: this.model,
       provider: 'GROQ',
-      keyType: this.apiKey ? 'primary' : 'fallback',
-      available: !!(this.apiKey || this.fallbackKey)
+      multiLanguage: true,
+      supportedLanguages: 15
     };
   }
 }
