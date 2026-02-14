@@ -5,7 +5,6 @@ const ToolRegistry = require('../tools/toolRegistry');
 const ContextManager = require('./contextManager');
 const SafetyFilter = require('./safetyFilter');
 const GroqProvider = require('../ai/groqProvider');
-const { detectLanguage, LANGUAGE_NAMES } = require('../utils/languageDetector');
 
 class ZetaOrchestrator {
   constructor() {
@@ -27,10 +26,6 @@ class ZetaOrchestrator {
     console.log(`🔄 Processing: "${userMessage.substring(0, 50)}..."`);
 
     try {
-      // 🌍 DİL ALGILAMA
-      const detectedLang = detectLanguage(userMessage);
-      console.log(`🌍 Detected language: ${LANGUAGE_NAMES[detectedLang] || detectedLang}`);
-
       // 1️⃣ GÜVENLİK KONTROLÜ
       const safetyCheck = this.safetyFilter.check(userMessage);
       if (!safetyCheck.safe) {
@@ -41,8 +36,8 @@ class ZetaOrchestrator {
         };
       }
 
-      // 2️⃣ CONTEXT HAZIRLA (dil bilgisi ile)
-      const context = this.contextManager.prepare(conversationHistory, detectedLang);
+      // 2️⃣ CONTEXT HAZIRLA
+      const context = this.contextManager.prepare(conversationHistory);
 
       // 3️⃣ TOOL KARARINI VER
       const toolDecision = await this.decideTools(userMessage);
