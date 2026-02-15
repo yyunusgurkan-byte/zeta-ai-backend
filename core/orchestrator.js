@@ -1,5 +1,5 @@
-// 🧠 ZETA ORCHESTRATOR - AI-Powered Tool Selection (Claude-like)
-// GROQ ile akıllı tool seçimi
+// 🧠 ZETA ORCHESTRATOR - Ana Karar Mekanizması
+// Claude'un orchestration layer'ına benzer yapı
 
 const ToolRegistry = require('../tools/toolRegistry');
 const ContextManager = require('./contextManager');
@@ -17,7 +17,10 @@ class ZetaOrchestrator {
   }
 
   /**
-   * Ana işlem fonksiyonu
+   * Ana işlem fonksiyonu - Claude'daki process() metoduna benzer
+   * @param {string} userMessage - Kullanıcı mesajı
+   * @param {Array} conversationHistory - Konuşma geçmişi
+   * @returns {Object} - İşlenmiş yanıt
    */
   async process(userMessage, conversationHistory = []) {
     console.log(`🔄 Processing: "${userMessage.substring(0, 50)}..."`);
@@ -36,151 +39,89 @@ class ZetaOrchestrator {
       // 2️⃣ CONTEXT HAZIRLA
       const context = this.contextManager.prepare(conversationHistory);
 
-      // 3️⃣ AI İLE TOOL KARARINI VER
-      const toolDecision = await this.decideToolsWithAI(userMessage);
+      // 3️⃣ TOOL KARARINI VER
+      const toolDecision = await this.decideTools(userMessage);
 
       // 4️⃣ TOOL VARSA ÇALIŞTIR
       if (toolDecision.useTool) {
-        console.log(`🔧 Tool selected by AI: ${toolDecision.toolName}`);
+        console.log(`🔧 Tool selected: ${toolDecision.toolName}`);
         
         const toolResult = await this.toolRegistry.execute(
           toolDecision.toolName,
-          toolDecision.params || { query: userMessage }
+          toolDecision.params
         );
 
-        if (!toolResult.success) {
-          console.log(`⚠️ Tool failed: ${toolResult.error}`);
+        // Tool başarılıysa AI'ya gönder
+        if (toolResult.success) {
+          return await this.generateResponseWithTool(
+            userMessage,
+            context,
+            toolDecision.toolName,
+            toolResult
+          );
+        } else {
+          // Tool başarısız, normal sohbete dön
+          console.warn(`⚠️ Tool failed: ${toolResult.error}`);
+          return await this.generateResponse(userMessage, context);
         }
-
-        // 5️⃣ GROQ İLE YANIT OLUŞTUR (Tool sonucuyla)
-        const finalResponse = await this.generateResponse(
-          userMessage,
-          context,
-          toolResult
-        );
-
-        return {
-          type: 'success',
-          message: finalResponse,
-          toolData: toolResult.data || null,
-          toolUsed: toolDecision.toolName
-        };
       }
 
-      // Tool yok - Sadece sohbet
-      const response = await this.generateResponse(userMessage, context, null);
-      
-      return {
-        type: 'success',
-        message: response,
-        toolData: null
-      };
+      // 5️⃣ NORMAL SOHBET
+      return await this.generateResponse(userMessage, context);
 
     } catch (error) {
-      console.error('❌ Orchestration error:', error);
+      console.error('❌ Orchestrator error:', error);
       return {
         type: 'error',
-        message: 'Bir hata oluştu. Lütfen tekrar deneyin.'
+        message: '❌ Bir hata oluştu. Lütfen tekrar deneyin.',
+        error: error.message
       };
     }
   }
 
   /**
-   * 🤖 AI-POWERED TOOL SELECTION (Claude gibi)
-   * GROQ ile akıllı tool seçimi
+   * Tool kararı ver - Hangi tool kullanılacak?
+   * ÖNEMLİ: Kontrol sırası önemli! Daha spesifik olanlar önce kontrol edilmeli.
    */
-  async decideToolsWithAI(userMessage) {
-    try {
-      const systemPrompt = `Sen bir tool selector asistanısın. Kullanıcının isteğine göre EN UYGUN tool'u seç.
+  async decideTools(userMessage) {
+    const lowerInput = userMessage.toLowerCase();
 
-MEVCUT TOOLS:
-1. webSearch - Genel arama, güncel bilgi, haberler, fiyatlar (Google arama)
-2. wikipedia - Ansiklopedik bilgi, kişiler, kavramlar, tanımlar
-3. weather - Hava durumu sorguları
-4. apiFootball - Futbol maçları, puan durumu, takımlar, golcüler
-5. calculator - Matematik hesaplamaları
+   // 🌤️ HAVA DURUMU - DAHA AKILLI KONTROL
+  const hasWeatherIntent = (
+    (lowerInput.includes('hava durumu') || lowerInput.includes('weather')) ||
+    (lowerInput.includes('sıcaklık') && !lowerInput.includes('öğren')) || // "öğren" varsa ML konusu
+    (lowerInput.includes('derece') && (lowerInput.includes('bugün') || lowerInput.includes('yarın'))) ||
+    /^(istanbul|ankara|izmir|bursa|antalya)\s*(hava|weather)/i.test(lowerInput)
+  );
 
-KURALLLAR:
-- "maç" kelimesi SADECE futbol bağlamında ise apiFootball kullan
-- "Maçka", "maçkolik" gibi kelimeler futbol DEĞİL
-- Güncel bilgi, fiyat, haber → webSearch
-- Kişi/kavram tanımı → wikipedia
-- Sıcaklık, hava → weather
-- Hesaplama → calculator
-- Emin değilsen → none
-
-Sadece tool adını döndür: webSearch, wikipedia, weather, apiFootball, calculator, veya none`;
-
-      const response = await this.groqProvider.chat.completions.create({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage }
-        ],
-        model: "llama-3.3-70b-versatile",
-        temperature: 0.1, // Düşük temperature = tutarlı kararlar
-        max_tokens: 20
-      });
-
-      const toolName = response.choices[0].message.content.trim().toLowerCase();
-      
-      console.log(`🤖 AI Tool Decision: "${toolName}" for "${userMessage.substring(0, 50)}..."`);
-
-      // Geçerli tool mı kontrol et
-      const validTools = ['websearch', 'wikipedia', 'weather', 'apifootball', 'calculator'];
-      
-      if (validTools.includes(toolName)) {
-        return {
-          useTool: true,
-          toolName: toolName,
-          params: { query: userMessage }
-        };
+  if (hasWeatherIntent) {
+    let city = 'Istanbul';
+    
+    const cityPatterns = [
+      /([a-zçğıöşü]+)\s+(?:hava durumu|weather)/i,
+      /(?:hava durumu|weather)\s+([a-zçğıöşü]+)/i,
+    ];
+    
+    for (const pattern of cityPatterns) {
+      const match = userMessage.match(pattern);
+      if (match && match[1]) {
+        city = match[1];
+        break;
       }
-
-      return { useTool: false };
-
-    } catch (error) {
-      console.error('❌ AI Tool Selection failed, falling back to keywords:', error.message);
-      // Fallback: Keyword-based (eski sistem)
-      return await this.decideToolsKeywordFallback(userMessage);
     }
+    
+    return {
+      useTool: true,
+      toolName: 'weather',
+      params: { city }
+    };
   }
 
-  /**
-   * 🔧 Fallback: Keyword-based tool selection
-   * AI başarısız olursa bu çalışır
-   */
-  async decideToolsKeywordFallback(userMessage) {
-    const lowerInput = userMessage.toLowerCase().trim();
-
-    // HAVA DURUMU (en üstte - öncelikli)
-    const weatherKeywords = ['hava', 'sıcaklık', 'derece', 'yağmur', 'güneş'];
-    if (weatherKeywords.some(k => lowerInput.includes(k))) {
-      let city = 'istanbul';
-      const cityPatterns = [
-        /([a-zçğıöşü]+)\s+hava/i,
-        /hava\s+([a-zçğıöşü]+)/i,
-        /([a-zçğıöşü]+)\s+sıcaklık/i
-      ];
-      
-      for (const pattern of cityPatterns) {
-        const match = userMessage.match(pattern);
-        if (match && match[1]) {
-          city = match[1];
-          break;
-        }
-      }
-      
-      return {
-        useTool: true,
-        toolName: 'weather',
-        params: { city }
-      };
-    }
-
-    // FUTBOL
+    // ⚽ SPOR SORGUSU
     const sportsKeywords = [
-      'galatasaray', 'fenerbahçe', 'beşiktaş', 'trabzonspor',
-      'süper lig', 'puan durumu', 'tablo', 'golcü', 'canlı maç'
+      'galatasaray', 'fenerbahçe', 'beşiktaş', 'trabzonspor', 'başakşehir',
+      'süper lig', 'puan durumu', 'puan tablosu', 'sıralama',
+      'maç', 'gol', 'skor', 'futbol', 'son maç'
     ];
 
     if (sportsKeywords.some(k => lowerInput.includes(k))) {
@@ -191,18 +132,34 @@ Sadece tool adını döndür: webSearch, wikipedia, weather, apiFootball, calcul
       };
     }
 
-    // WIKIPEDIA
-    const wikiPatterns = [/nedir$/i, /kimdir$/i, /hakkında/i];
+    // 📚 WIKIPEDIA
+    const wikiPatterns = [
+      /nedir$/i,
+      /kimdir$/i,
+      /ne demek$/i,
+      /hakkında/i
+    ];
+
     if (wikiPatterns.some(p => p.test(userMessage))) {
-      return {
-        useTool: true,
-        toolName: 'wikipedia',
-        params: { query: userMessage.replace(/nedir|kimdir|hakkında/gi, '').trim() }
-      };
+      const searchTerm = userMessage
+        .replace(/nedir|kimdir|ne demek|hakkında|bilgi ver/gi, '')
+        .trim();
+
+      if (searchTerm.length > 2) {
+        return {
+          useTool: true,
+          toolName: 'wikipedia',
+          params: { query: searchTerm }
+        };
+      }
     }
 
-    // WEB SEARCH
-    const searchKeywords = ['ara', 'bul', 'güncel', 'haber'];
+    // 🌐 GOOGLE SEARCH (EN SONA BIRAK - catch-all)
+    const searchKeywords = [
+      'ara', 'bul', 'search', 'güncel', 'son dakika',
+      'bugün', 'şu an', 'haber'
+    ];
+
     if (searchKeywords.some(k => lowerInput.includes(k))) {
       return {
         useTool: true,
@@ -211,8 +168,10 @@ Sadece tool adını döndür: webSearch, wikipedia, weather, apiFootball, calcul
       };
     }
 
-    // CALCULATOR
-    if (/(\d+)\s*[\+\-\*\/]\s*(\d+)/.test(userMessage)) {
+    // 🔢 HESAP MAKINESI
+    const mathPattern = /(\d+)\s*[\+\-\*\/x÷]\s*(\d+)/;
+    
+    if (mathPattern.test(userMessage)) {
       return {
         useTool: true,
         toolName: 'calculator',
@@ -220,42 +179,56 @@ Sadece tool adını döndür: webSearch, wikipedia, weather, apiFootball, calcul
       };
     }
 
+    // ❌ TOOL GEREKMİYOR
     return { useTool: false };
   }
 
   /**
-   * GROQ ile final response oluştur
+   * Tool sonucuyla yanıt üret
    */
-  async generateResponse(userMessage, context, toolResult) {
-    const systemPrompt = `Sen Zeta AI adında yardımcı bir asistansın. Türkçe konuşursun.
-${toolResult ? `
-Kullanıcıya tool sonucunu doğal bir dille açıkla. Tool verilerini direkt gösterme, onları yorumla ve anlaşılır hale getir.
+  async generateResponseWithTool(userMessage, context, toolName, toolResult) {
+    // Tool sonucunu AI prompt'una ekle
+    const toolPrompt = `
+Kullanıcı sorusu: "${userMessage}"
 
-Tool Sonucu:
-${JSON.stringify(toolResult.data, null, 2)}
-` : ''}
+${toolName} tool'undan gelen bilgi:
+${JSON.stringify(toolResult.data || toolResult, null, 2)}
 
-KURALLAR:
-- Kısa ve öz yaz
-- Doğal konuş
-- Tool verilerini yorum
-yaparak aktar
-- Gereksiz detay verme`;
+Yukarıdaki bilgiyi kullanarak kullanıcıya KISA, NET ve ANLAŞILIR bir yanıt ver.
+KURALLLAR:
+- JSON formatını kullanıcıya gösterme
+- Doğal dil ile yanıt ver
+- Maksimum 3-4 cümle
+- Bilgiyi özetle, aynen kopyalama
+`;
 
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...context.messages,
-      { role: "user", content: userMessage }
-    ];
+    const response = await this.groqProvider.chat(context, toolPrompt);
 
-    const response = await this.groqProvider.chat.completions.create({
-      messages,
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.7,
-      max_tokens: 1000
-    });
+    return {
+      type: 'success',
+      message: response,
+      toolUsed: toolName,
+      toolData: toolResult.data
+    };
+  }
 
-    return response.choices[0].message.content;
+  /**
+   * Normal yanıt üret (tool olmadan)
+   */
+  async generateResponse(userMessage, context) {
+    const response = await this.groqProvider.chat(context, userMessage);
+
+    return {
+      type: 'success',
+      message: response
+    };
+  }
+
+  /**
+   * Mevcut toolları listele
+   */
+  listTools() {
+    return this.toolRegistry.list();
   }
 }
 
