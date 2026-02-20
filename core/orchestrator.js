@@ -201,6 +201,17 @@ class ZetaOrchestrator {
       return { useTool: true, toolName: 'webSearch', params: { query: userMessage } };
     }
 
+// 📸 INSTAGRAM
+const instagramPatterns = [
+  /instagram\.com\//i,
+  /instagram.*analiz/i,
+  /instagram.*profil/i,
+  /@[a-z0-9_.]+/i
+];
+if (instagramPatterns.some(p => p.test(userMessage))) {
+  return { useTool: true, toolName: 'instagram', params: { query: userMessage } };
+}
+
     // 🔢 HESAP MAKİNESİ
     if (/(\d+)\s*[\+\-\*\/x÷]\s*(\d+)/.test(userMessage)) {
       return { useTool: true, toolName: 'calculator', params: { expression: userMessage } };

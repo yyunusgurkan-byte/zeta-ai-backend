@@ -19,6 +19,7 @@ class ToolRegistry {
     this.register('weather', require('./weather'));
     this.register('calculator', require('./calculator'));
     this.register('apiFootball', require('./apiFootball'));
+    this.register('instagram', require('./instagram'));
     // this.register('tffSports', require('./tffSports')); ← Yorum satırı yaptık
 
     
