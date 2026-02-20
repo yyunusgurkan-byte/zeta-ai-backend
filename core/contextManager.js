@@ -3,7 +3,7 @@
 
 class ContextManager {
   constructor() {
-    this.MAX_TOKENS = 8000;           // Llama 3.1 context limit
+    this.MAX_TOKENS = 16000;          // Llama 3.1 context limit
     this.SYSTEM_PROMPT_TOKENS = 500;  // Sistem promptu için rezerve
     this.RESPONSE_RESERVE = 1500;     // Yanıt için rezerve
     this.CHARS_PER_TOKEN = 4;         // Yaklaşık token hesabı

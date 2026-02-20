@@ -157,11 +157,11 @@ class ZetaOrchestrator {
 
     // 🌤️ HAVA DURUMU
     const hasWeatherIntent = (
-      (lowerInput.includes('hava durumu') || lowerInput.includes('weather')) ||
-      (lowerInput.includes('sıcaklık') && !lowerInput.includes('öğren')) ||
-      (lowerInput.includes('derece') && (lowerInput.includes('bugün') || lowerInput.includes('yarın'))) ||
-      /^(istanbul|ankara|izmir|bursa|antalya)\s*(hava|weather)/i.test(lowerInput)
-    );
+  (lowerInput.includes('hava durumu') || lowerInput.includes('weather')) ||
+  (lowerInput.includes('sıcaklık') && !lowerInput.includes('öğren')) ||
+  (lowerInput.includes('derece') && (lowerInput.includes('bugün') || lowerInput.includes('yarın'))) ||
+  /^(istanbul|ankara|izmir|bursa|antalya)\s*(hava|weather)/i.test(lowerInput)
+);
 
     if (hasWeatherIntent) {
       let city = 'Istanbul';
