@@ -54,10 +54,12 @@ app.get('/api/status', (req, res) => {
 const chatRoutes = require('./routes/chat');
 const conversationRoutes = require('./routes/conversation');
 const uploadRoutes = require('./routes/upload');
+const packageRoutes = require('./routes/packageRoute'); // ✅ DOĞRU YER
 
 app.use('/api/chat', chatRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api', packageRoutes); // ✅ DOĞRU YER
 
 // ====================================================================
 // ERROR HANDLER - Wildcard'dan ÖNCE!
@@ -86,6 +88,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Sunucu ${PORT} portunda başlatıldı.`);
   console.log(`📡 Health: http://localhost:${PORT}/health`);
   console.log(`📤 Upload: http://localhost:${PORT}/api/upload`);
+  console.log(`📦 Package Analyzer: http://localhost:${PORT}/api/analyze-packages`);
 });
 
 module.exports = app;

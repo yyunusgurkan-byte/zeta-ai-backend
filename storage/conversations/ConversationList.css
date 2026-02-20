@@ -1,0 +1,216 @@
+/* frontend/src/components/Sidebar/ConversationList.css */
+
+.conversation-list-container {
+  width: 280px;
+  height: 100vh;
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Header */
+.conversation-list-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+}
+
+.new-conversation-btn {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.new-conversation-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+}
+
+.new-conversation-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.new-conversation-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Scroll Area */
+.conversation-list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.5rem;
+}
+
+.conversation-list-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.conversation-list-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.conversation-list-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.conversation-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Items Container */
+.conversation-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Loading State */
+.conversation-list-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #a0aec0;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.conversation-list-loading p {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Error State */
+.conversation-list-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #e53e3e;
+  gap: 1rem;
+  text-align: center;
+}
+
+.conversation-list-error svg {
+  opacity: 0.5;
+}
+
+.conversation-list-error p {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Empty State */
+.conversation-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #a0aec0;
+  gap: 1rem;
+}
+
+.conversation-list-empty svg {
+  opacity: 0.3;
+}
+
+.conversation-list-empty h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0;
+}
+
+.conversation-list-empty p {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .conversation-list-container {
+    width: 100%;
+    height: auto;
+    max-height: 60vh;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .conversation-list-header {
+    padding: 0.75rem;
+  }
+
+  .new-conversation-btn {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .conversation-list-container {
+    background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+    border-right-color: #4a5568;
+  }
+
+  .conversation-list-header {
+    background: #2d3748;
+    border-bottom-color: #4a5568;
+  }
+
+  .conversation-list-scroll::-webkit-scrollbar-thumb {
+    background: #4a5568;
+  }
+
+  .conversation-list-scroll::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+  }
+
+  .conversation-list-empty h3 {
+    color: #e2e8f0;
+  }
+
+  .conversation-list-empty p {
+    color: #718096;
+  }
+
+  .loading-spinner {
+    border-color: #4a5568;
+    border-top-color: #667eea;
+  }
+}
