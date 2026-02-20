@@ -3,11 +3,12 @@
 const axios = require('axios');
 
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
-const BASE_URL = 'https://instagram-looter2.p.rapidapi.com';
+const BASE_URL = 'https://instagram120.p.rapidapi.com';
 
 const headers = {
-  'x-rapidapi-host': 'instagram-looter2.p.rapidapi.com',
-  'x-rapidapi-key': RAPIDAPI_KEY
+  'x-rapidapi-host': 'instagram120.p.rapidapi.com',
+  'x-rapidapi-key': RAPIDAPI_KEY,
+  'Content-Type': 'application/json'
 };
 
 // Kullanıcı adını URL'den çıkar
@@ -21,11 +22,10 @@ const extractUsername = (input) => {
 
 // Profil bilgisi getir
 async function getProfile(username) {
-  const response = await axios.get(`${BASE_URL}/profile`, {
-    params: { username },
-    headers,
-    timeout: 10000
-  });
+  const response = await axios.post(`${BASE_URL}/api/instagram/posts`, 
+    { username, maxId: "" },
+    { headers, timeout: 10000 }
+  );
   return response.data;
 }
 
