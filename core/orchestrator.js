@@ -196,7 +196,7 @@ class ZetaOrchestrator {
     }
 
     // 🌐 WEB SEARCH
-    const searchKeywords = ['ara','search','güncel','son dakika','şu an','haber'];
+   const searchKeywords = ['ara','search','güncel','son dakika','şu an','haber','dolar','euro','döviz','kur'];
     if (searchKeywords.some(k => lowerInput.includes(k))) {
       return { useTool: true, toolName: 'webSearch', params: { query: userMessage } };
     }
