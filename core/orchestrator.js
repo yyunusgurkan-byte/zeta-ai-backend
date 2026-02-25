@@ -4,6 +4,7 @@ const ContextManager = require('./contextManager');
 const SafetyFilter = require('./safetyFilter');
 const GroqProvider = require('../ai/groqProvider');
 const { analyzePackageJson } = require('../tools/packageAnalyzer');
+const { getNobetciEczaneler } = require('../tools/eczane'); // 💊
 
 class ZetaOrchestrator {
   constructor() {
@@ -37,6 +38,13 @@ class ZetaOrchestrator {
       if (packageJson) {
         console.log('📦 package.json algılandı, analiz başlıyor...');
         return await this.handlePackageAnalysis(userMessage, context, packageJson);
+      }
+
+      // 💊 NÖBETÇİ ECZANE KONTROLÜ
+      const eczaneCheck = this.extractEczaneSehir(userMessage);
+      if (eczaneCheck) {
+        console.log(`💊 Nöbetçi eczane isteği: ${eczaneCheck}`);
+        return await this.handleEczane(eczaneCheck);
       }
 
       // 4️⃣ TOOL KARARINI VER
@@ -241,6 +249,47 @@ KURALLAR:
   async generateResponse(userMessage, context) {
     const response = await this.groqProvider.chat(context, userMessage);
     return { type: 'success', message: response };
+  }
+
+  // 💊 Nöbetçi eczane şehir algıla
+  extractEczaneSehir(userMessage) {
+    const msg = userMessage.toLowerCase();
+    const eczaneKeywords = [
+      'nöbetçi eczane', 'nobetci eczane', 'eczane nöbet',
+      'açık eczane', 'acik eczane', 'nöbetçi eczaneler', 'eczane bul'
+    ];
+    if (!eczaneKeywords.some(k => msg.includes(k))) return null;
+
+    const sehirler = [
+      'istanbul', 'ankara', 'izmir', 'bursa', 'antalya', 'adana',
+      'konya', 'gaziantep', 'mersin', 'kayseri', 'eskişehir', 'eskisehir',
+      'diyarbakır', 'diyarbakir', 'samsun', 'trabzon', 'malatya',
+      'sakarya', 'denizli', 'manisa', 'balıkesir', 'balikesir',
+      'van', 'erzurum', 'kahramanmaraş', 'kahramanmaras'
+    ];
+    for (const s of sehirler) {
+      if (msg.includes(s)) return s;
+    }
+    return 'istanbul'; // Varsayılan
+  }
+
+  // 💊 Nöbetçi eczane getir
+  async handleEczane(sehir) {
+    try {
+      const data = await getNobetciEczaneler(sehir);
+      if (!data.success) {
+        return { type: 'success', message: `❌ ${sehir} için nöbetçi eczane bilgisi alınamadı.` };
+      }
+      return {
+        type: 'success',
+        message: `💊 **${data.sehir}** için bugün **${data.toplam}** nöbetçi eczane bulundu.`,
+        toolUsed: 'eczane',
+        toolData: { type: 'eczane', ...data }
+      };
+    } catch (err) {
+      console.error('❌ Eczane hatası:', err);
+      return { type: 'success', message: `❌ Nöbetçi eczane bilgisi alınamadı: ${err.message}` };
+    }
   }
 
   listTools() {
