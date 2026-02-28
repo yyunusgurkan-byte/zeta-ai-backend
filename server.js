@@ -58,6 +58,8 @@ const packageRoutes = require('./routes/packageRoute');
 const eczaneRoutes = require('./routes/eczane');
 const iddaaRoutes = require('./routes/iddaaRoute');
 app.use('/api/iddaa', iddaaRoutes);
+const dovizRoutes = require('./routes/dovizRoute');
+app.use('/api/doviz', dovizRoutes);
 
 app.use('/api/chat', chatRoutes);
 app.use('/api/conversations', conversationRoutes);
