@@ -56,6 +56,8 @@ const conversationRoutes = require('./routes/conversation');
 const uploadRoutes = require('./routes/upload');
 const packageRoutes = require('./routes/packageRoute');
 const eczaneRoutes = require('./routes/eczane');
+const iddaaRoutes = require('./routes/iddaaRoute');
+app.use('/api/iddaa', iddaaRoutes);
 
 app.use('/api/chat', chatRoutes);
 app.use('/api/conversations', conversationRoutes);
