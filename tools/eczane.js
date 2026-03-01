@@ -29,7 +29,7 @@ async function getNobetciEczaneler(sehir, ilce = null) {
     
     const eczaneler = data.data.map(e => ({
      
-      ad: e.name || '',
+      ad: e.name || e.eczaneAdi || e.title || e.pharmacyName || Object.values(e).find(v => typeof v === 'string' && v.length > 3 && !v.includes('/') && !v.includes('+')) || '',
       adres: e.address || '',
       telefon: e.phone || '',
       ilce: e.district || '',
