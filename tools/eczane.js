@@ -41,7 +41,7 @@ async function getNobetciEczaneler(sehir, ilce = null) {
       success: true,
       sehir: sehirGoster,
       tarih: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
-      eczaneler: eczaneler.slice(0, 100),
+      eczaneler: eczaneler.slice(0, 30),
       toplam: eczaneler.length,
     };
 
