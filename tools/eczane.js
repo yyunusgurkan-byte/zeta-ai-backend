@@ -26,8 +26,9 @@ async function getNobetciEczaneler(sehir, ilce = null) {
     if (!data || data.status !== 'success' || !data.data) {
       return { success: false, error: data.message || 'Veri alınamadı', sehir };
     }
-
+    
     const eczaneler = data.data.map(e => ({
+     
       ad: e.name || '',
       adres: e.address || '',
       telefon: e.phone || '',
@@ -40,7 +41,7 @@ async function getNobetciEczaneler(sehir, ilce = null) {
       success: true,
       sehir: sehirGoster,
       tarih: new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
-      eczaneler: eczaneler.slice(0, 20),
+      eczaneler: eczaneler.slice(0, 100),
       toplam: eczaneler.length,
     };
 
