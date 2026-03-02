@@ -60,6 +60,8 @@ const iddaaRoutes = require('./routes/iddaaRoute');
 app.use('/api/iddaa', iddaaRoutes);
 const dovizRoutes = require('./routes/dovizRoute');
 app.use('/api/doviz', dovizRoutes);
+const footballRoutes = require('./routes/football');
+app.use('/api/football', footballRoutes);
 
 app.use('/api/chat', chatRoutes);
 app.use('/api/conversations', conversationRoutes);
