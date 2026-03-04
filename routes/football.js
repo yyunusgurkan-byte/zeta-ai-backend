@@ -7,7 +7,7 @@ const BASE_URL = 'https://v3.football.api-sports.io';
 
 router.get('/*', async (req, res) => {
   try {
-    const response = await axios.get(`${BASE_URL}${req.path}`, {
+    const response = await axios.get(`${BASE_URL}/fixtures?live=all`, {
       params: req.query,
       headers: { 'x-apisports-key': API_KEY }
     });

@@ -46,8 +46,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/api/status', (req, res) => {
-  res.json({ service: 'Zeta AI Backend', status: 'running' });
+app.get('/ping', (req, res) => {
+  res.send('OK');
 });
 
 // API Routes
