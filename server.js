@@ -55,7 +55,7 @@ const chatRoutes = require('./routes/chat');
 const conversationRoutes = require('./routes/conversation');
 const uploadRoutes = require('./routes/upload');
 const packageRoutes = require('./routes/packageRoute');
-const eczaneRoutes = require('./routes/eczane');
+
 const iddaaRoutes = require('./routes/iddaaRoute');
 app.use('/api/iddaa', iddaaRoutes);
 const dovizRoutes = require('./routes/dovizRoute');
@@ -67,7 +67,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api', packageRoutes);
-app.use('/api/eczane', eczaneRoutes);
+
 
 // ====================================================================
 // ERROR HANDLER - Wildcard'dan ÖNCE!
