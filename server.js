@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios'); // 👈 Axios'u buraya ekledik
 require('dotenv').config();
 
 const app = express();
@@ -32,6 +33,23 @@ app.use((req, res, next) => {
   console.log(`📥 ${req.method} ${req.path}`);
   next();
 });
+
+// ====================================================================
+// RENDER KEEP-ALIVE (UYKU ÖNLEYİCİ) FONKSİYONU
+// ====================================================================
+const RENDER_URL = process.env.RENDER_EXTERNAL_URL || "https://zeta-ai.onrender.com";
+
+const keepAlive = (url) => {
+  console.log(`[Keep-Alive] 🛡️ Uyarıcı sistem aktif: ${url}`);
+  setInterval(async () => {
+    try {
+      const response = await axios.get(`${url}/ping`);
+      console.log(`[Keep-Alive] 🛡️ Ping başarılı: ${response.status} - Sunucu uyanık.`);
+    } catch (error) {
+      console.error(`[Keep-Alive] ⚠️ Hata: ${error.message}`);
+    }
+  }, 13 * 60 * 1000); // 13 dakikada bir tetiklenir
+};
 
 // ====================================================================
 // ROUTES
@@ -95,9 +113,9 @@ app.use((req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Sunucu ${PORT} portunda başlatıldı.`);
   console.log(`📡 Health: http://localhost:${PORT}/health`);
-  console.log(`📤 Upload: http://localhost:${PORT}/api/upload`);
-  console.log(`📦 Package Analyzer: http://localhost:${PORT}/api/analyze-packages`);
-  console.log(`💊 Eczane: http://localhost:${PORT}/api/eczane/:sehir`);
+  
+  // Render'ı uyanık tutma işlemini başlat
+  keepAlive(RENDER_URL);
 });
 
 module.exports = app;
