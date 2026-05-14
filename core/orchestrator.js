@@ -5,6 +5,7 @@ const SafetyFilter = require('./safetyFilter');
 const GroqProvider = require('../ai/groqProvider');
 const { analyzePackageJson } = require('../tools/packageAnalyzer');
 const { getNobetciEczaneler } = require('../tools/eczane');
+const enhancedSearch = require('../tools/enhancedSearch');
 
 class ZetaOrchestrator {
   constructor() {
@@ -12,6 +13,7 @@ class ZetaOrchestrator {
     this.contextManager = new ContextManager();
     this.safetyFilter = new SafetyFilter();
     this.groqProvider = new GroqProvider();
+    this.toolRegistry.register('webSearch', enhancedSearch);
     console.log('🧠 Zeta Orchestrator initialized');
   }
 
